@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador v3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+        body { background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .input-focado { width: 100%; border: 1.5px solid #e2e8f0; border-radius: 6px; padding: 6px 10px; font-size: 14px; font-weight: 700; color: #1e40af; outline: none; }
+        .label-focado { display: block; font-size: 9px; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 2px; }
+        .row-resultado { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen">
+
+    <div class="bg-white rounded-xl p-5 shadow-2xl w-full max-w-[580px] border border-slate-200">
+        <header class="flex justify-between items-center border-b pb-2 mb-4">
+            <h2 class="text-lg font-black text-slate-800 uppercase flex items-center gap-2">
+                <i data-lucide="building-2" class="text-emerald-500 w-5"></i> Simulação de Viabilidade
+            </h2>
+            <span class="text-[9px] font-bold bg-slate-100 px-2 py-1 rounded">V3.0 BETA</span>
+        </header>
+
+        <div class="grid grid-cols-6 gap-3">
+            <div class="col-span-3">
+                <label class="label-focado">Valor Imóvel</label>
+                <input type="text" id="f_v_imovel" value="500.000,00" class="input-focado">
+            </div>
+            <div class="col-span-1">
+                <label class="label-focado">% Obra</label>
+                <input type="text" id="f_p_obra" value="20" class="input-focado text-center">
+            </div>
+            <div class="col-span-1">
+                <label class="label-focado">% Sinal</label>
+                <input type="text" id="f_p_sinal" value="5" class="input-focado text-center">
+            </div>
+            <div class="col-span-1">
+                <label class="label-focado">Meses</label>
+                <input type="text" id="f_m_obra" value="24" class="input-focado text-center">
+            </div>
+
+            <div class="col-span-2">
+                <label class="label-focado">% Balões</label>
+                <input type="text" id="f_p_baloes" value="5" class="input-focado text-center">
+            </div>
+            <div class="col-span-2">
+                <label class="label-focado">Qtd Balões</label>
+                <select id="f_q_baloes" class="input-focado">
+                    <option value="1">1 Balão</option>
+                    <option value="2">2 Balões</option>
+                    <option value="3" selected>3 Balões</option>
+                </select>
+            </div>
+            <div class="col-span-2">
+                <label class="label-focado">Taxa AA %</label>
+                <input type="text" id="f_tx" value="9,5" class="input-focado text-center">
+            </div>
+        </div>
+
+        <button onclick="calcular()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-3 mt-4 rounded-lg uppercase text-xs tracking-widest shadow flex justify-center items-center gap-2 transition-all active:scale-95">
+            Gerar Estudo de Fluxo
+        </button>
+
+        <div id="resultado" class="hidden mt-4 space-y-3">
+            <div class="bg-blue-600 text-white p-3 rounded-lg flex justify-between items-center px-6">
+                <div>
+                    <span class="text-[9px] font-bold uppercase opacity-80">Renda Sugerida</span>
+                    <div id="res_renda" class="text-2xl font-black leading-none"></div>
+                </div>
+                <i data-lucide="trending-up" class="w-8 h-8 opacity-30"></i>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-slate-50 p-3 rounded-lg border-t-2 border-emerald-400">
+                    <h3 class="text-[9px] font-black text-slate-400 uppercase mb-2">Entrada/Obra</h3>
+                    <div class="row-resultado"><span>Sinal</span><span id="res_sinal" class="font-bold"></span></div>
+                    <div class="row-resultado"><span>Mensais</span><span id="res_mensal" class="font-bold"></span></div>
+                    <div class="row-resultado border-none pb-0"><span>Balões</span><span id="res_balao" class="font-bold"></span></div>
+                    <div class="mt-2 pt-2 border-t border-slate-200 flex justify-between">
+                        <span class="text-[9px] font-bold text-slate-400 uppercase">Total</span>
+                        <span id="res_total_obra" class="text-sm font-black text-emerald-600"></span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-lg border-t-2 border-blue-500">
+                    <h3 class="text-[9px] font-black text-slate-400 uppercase mb-2">Pós-Chaves</h3>
+                    <div id="res_fin" class="text-xs font-black text-blue-700 mb-2 border-b border-slate-200 pb-1"></div>
+                    <div class="row-resultado"><span>Parc. SAC</span><span id="res_sac" class="font-bold"></span></div>
+                    <div class="row-resultado border-none"><span>Parc. Price</span><span id="res_price" class="font-bold"></span></div>
+                </div>
+            </div>
+
+            <footer class="flex justify-between items-center pt-2">
+                <span class="text-[8px] text-slate-400 font-bold uppercase">Financiador Pro by Elian Caetano</span>
+                <span class="text-[8px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded-full font-black">Licença Beta: {{ dias_restantes }} dias</span>
+            </footer>
+        </div>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        const fmt = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
+
+        async function calcular() {
+            const data = {
+                valor_imovel: document.getElementById('f_v_imovel').value,
+                percentual_obra: document.getElementById('f_p_obra').value,
+                percentual_sinal: document.getElementById('f_p_sinal').value,
+                percentual_baloes: document.getElementById('f_p_baloes').value,
+                qtd_baloes: document.getElementById('f_q_baloes').value,
+                numero_parcelas: document.getElementById('f_m_obra').value,
+                taxa_juros: document.getElementById('f_tx').value
+            };
+
+            const resp = await fetch('/api/calcular', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+
+            if (resp.ok) {
+                const r = await resp.json();
+                document.getElementById('resultado').classList.remove('hidden');
+                document.getElementById('res_renda').innerText = fmt.format(r.renda);
+                document.getElementById('res_sinal').innerText = fmt.format(r.v_sinal);
+                document.getElementById('res_mensal').innerText = `${r.qtd_m}x ${fmt.format(r.v_mensal)}`;
+                document.getElementById('res_balao').innerText = `${r.qtd_b}x ${fmt.format(r.v_balao)}`;
+                document.getElementById('res_total_obra').innerText = fmt.format(r.total_obra);
+                document.getElementById('res_fin').innerText = "Crédito: " + fmt.format(r.v_fin);
+                document.getElementById('res_sac').innerText = fmt.format(r.sac);
+                document.getElementById('res_price').innerText = fmt.format(r.price);
+            }
+        }
+    </script>
+</body>
+</html>
